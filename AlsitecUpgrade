@@ -1,0 +1,54 @@
+!/usr/bin/python3
+import getpass
+import telnetlib
+from time import sleep
+
+class Account:
+    def __init__(self, login, password, host):
+        self.login = login
+        self.password = password
+        self.host = host
+
+    def __repr__(self):
+        return "Account (%s:%s @ %s)" % (self.login, self.password, self.host)
+
+def connect(user,password,host):
+    data = open('alsVers.txt', 'w')
+    tn = telnetlib.Telnet(host)
+    tn.read_until(b':')
+    tn.write(user.encode('ascii')+b'\n')
+    sleep(5)
+    if password:
+        tn.read_until(b':')
+        tn.write(password.encode('ascii')+b'\n')
+    else:
+        tn.read_until(b':')
+        tn.write(b'\n')
+    tn.set_debuglevel(10000)
+    sleep(5)
+    tn.write('enable'.encode('ascii')+b'\n')
+    sleep(5)
+    tn.write(b'\n')
+    sleep(5)
+    tn.write('copy tftp://192.168.101.47/alsitec/24110/als-24110lvt-1.0.0.26f25.stk image2'.encode('ascii')+b'\n')
+    sleep(5)
+    tn.write('y'.encode('ascii')+b'\n')   
+    sleep(15)
+    tn.read_until(b'#')
+    sleep(200) 
+    tn.write('wr mem'.encode('ascii')+b'\n')
+    tn.write('y'.encode('ascii')+b'\n')
+    sleep(5)
+    alsVers = tn.read_very_eager().decode('ascii').strip(' \n\r\t')
+    data.write(str(alsVers))
+    data.close()
+    tn.write('reload'.encode('ascii')+b'\n')
+    tn.write('y'.encode('ascii')+b'\n')
+    tn.close()
+
+address = input("Enter ip-address: ")
+user = input("Enter your login: ")
+password = getpass.getpass()
+
+acc = Account(user, password, address)
+print(acc) #debug
